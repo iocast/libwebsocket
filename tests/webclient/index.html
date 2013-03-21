@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8"></meta>
+        <script src="/js/jquery.js"></script>
+        
+        <script type="text/javascript">
+            var ws = null;
+            $(function() {
+              $("#log").append("connecting<br/>");
+              ws = new WebSocket("ws://localhost:8080");
+              
+              ws.onopen = function() {
+              $("#log").append("connected<br/>");
+              };
+              
+              ws.onmessage = function (e) {
+              $("#log").append("received: " + e.data + "<br/>");
+              };
+              
+              
+              $("#exec").click(function() {
+                               msg = $("#msg").val();
+                               $("#log").append("sent: " + msg + "<br/>");
+                               ws.send(msg);
+                               return false;
+                               });
+              
+              });
+            
+            /*
+             window.onbeforeunload = function() {
+             
+             ws.send("DISCONNECTED");
+             ws.onclose = function () {}; // disable onclose handler first
+             ws.close()
+             
+             };
+             */
+            
+            </script>
+        
+        
+        <style media="screen" type="text/css">
+            body {vertical-align:middle;}
+            </style>
+        
+    </head>
+    
+    <body>
+        <input id="msg" type="text" value="Hello World!"/>
+        <button id="exec">exec</button>
+        <div style="width:100%;" id="log">
+        </div>
+    </body>
+    
+</html>
