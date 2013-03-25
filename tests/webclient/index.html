@@ -3,10 +3,37 @@
     <head>
         <meta charset="utf-8"></meta>
         <script src="/js/jquery.js"></script>
+		<script src="/js/openlayers/OpenLayers.js"></script>
+        
         
         <script type="text/javascript">
             var ws = null;
+            var map = null;
+            var vectorLayer = null
+            
             $(function() {
+              map = new OpenLayers.Map('map', {
+                                       controls : [],
+                                       projection: new OpenLayers.Projection('EPSG:21781'),
+                                       displayProjection: new OpenLayers.Projection('EPSG:21781'),
+                                       });
+              
+              var layer = new OpenLayers.Layer.Image(
+                                                     'Orthophoto',
+                                                     '/data/orthophoto_small.png',
+                                                     new OpenLayers.Bounds(566250, 223400, 570575, 226640),
+                                                     new OpenLayers.Size(800, 600),
+                                                     {numZoomLevels: 1}
+                                                     );
+              
+              
+              map.addLayer(layer);
+              map.zoomToMaxExtent();
+              
+              vectorLayer = new OpenLayers.Layer.Vector("CryEngine", {});
+              map.addLayer(vectorLayer);
+              
+              
               $("#log").append("connecting<br/>");
               ws = new WebSocket("ws://localhost:8080");
               
@@ -16,6 +43,10 @@
               
               ws.onmessage = function (e) {
               $("#log").append("received: " + e.data + "<br/>");
+              var point = new OpenLayers.Geometry.Point(568000,225000);
+              var feature = new OpenLayers.Feature.Vector(point, null, null);
+              vectorLayer.addFeatures([feature]);
+              vectorLayer.redraw();
               };
               
               
@@ -28,19 +59,22 @@
               
               });
             
+			
+            
+            
+            
+            
             /*
              window.onbeforeunload = function() {
-             
              ws.send("DISCONNECTED");
              ws.onclose = function () {}; // disable onclose handler first
              ws.close()
-             
              };
              */
             
             </script>
         
-        
+		
         <style media="screen" type="text/css">
             body {vertical-align:middle;}
             </style>
@@ -50,6 +84,7 @@
     <body>
         <input id="msg" type="text" value="Hello World!"/>
         <button id="exec">exec</button>
+		<div id="map" style="width:800px;height:600px;"></div>
         <div style="width:100%;" id="log">
         </div>
     </body>

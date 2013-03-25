@@ -1,28 +1,6 @@
-import time
-import struct
-import socket
+import logging
 import hashlib
 import base64
-import sys
-from select import select
-import re
-import logging
-from threading import Thread
-import signal
-
-# Simple WebSocket server implementation. Handshakes with the client then echos back everything
-# that is received. Has no dependencies (doesn't require Twisted etc) and works with the RFC6455
-# version of WebSockets. Tested with FireFox 16, though should work with the latest versions of
-# IE, Chrome etc.
-#
-# rich20b@gmail.com
-# Adapted from https://gist.github.com/512987 with various functions stolen from other sites, see
-# below for full details.
-
-# Constants
-MAGICGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-TEXT = 0x01
-BINARY = 0x02
 
 
 # WebSocket implementation
@@ -88,11 +66,11 @@ class WebSocketEchoServer(object):
         
         # in Python 2, strs are bytes and unicodes are strings
         if type(s) == unicode:
-            b1 |= TEXT
+            b1 |= self.server.text
             payload = s.encode("UTF8")
         
         elif type(s) == str:
-            b1 |= TEXT
+            b1 |= self.server.text
             payload = s
         
         # Append 'FIN' flag to the message
@@ -176,7 +154,7 @@ class WebSocketEchoServer(object):
             if name.lower() == "sec-websocket-key":
                 
                 # Append the standard GUID and get digest
-                combined = value + MAGICGUID
+                combined = value + self.server.magicGuiId
                 response = base64.b64encode(hashlib.sha1(combined).digest())
                 
                 # Replace the placeholder in the handshake response
@@ -185,89 +163,15 @@ class WebSocketEchoServer(object):
         logging.debug("Sending handshake %s" % handshake)
         self.client.send(handshake)
         return True
-    
-    #def onmessage(self, data):
-        #logging.info("Got message: %s" % data)
-        #self.send(data)
-    
-    #def send(self, data):
-        #logging.info("Sent message: %s" % data)
-        #self.client.send("\x00%s\xff" % data)
-    
-    #def close(self):
-        #self.client.close()
 
+#def onmessage(self, data):
+#logging.info("Got message: %s" % data)
+#self.send(data)
 
-# WebSocket server implementation
-class WebSocketServer(object):
-    
-    # Constructor
-    def __init__(self, bind, port, cls):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((bind, port))
-        self.bind = bind
-        self.port = port
-        self.cls = cls
-        self.connections = {}
-        self.listeners = [self.socket]
-    
-    # Listen for requests
-    def listen(self, backlog=5):
-        
-        self.socket.listen(backlog)
-        logging.info("Listening on %s" % self.port)
-        
-        # Keep serving requests
-        self.running = True
-        while self.running:
-            
-            # Find clients that need servicing
-            rList, wList, xList = select(self.listeners, [], self.listeners, 1)
-            for ready in rList:
-                if ready == self.socket:
-                    logging.debug("New client connection")
-                    client, address = self.socket.accept()
-                    fileno = client.fileno()
-                    self.listeners.append(fileno)
-                    self.connections[fileno] = self.cls(client, self)
-                else:
-                    logging.debug("Client ready for reading %s" % ready)
-                    client = self.connections[ready].client
-                    data = client.recv(4096)
-                    fileno = client.fileno()
-                    if data:
-                        self.connections[fileno].feed(data)
-                    else:
-                        logging.debug("Closing client %s" % ready)
-                        self.connections[fileno].close()
-                        del self.connections[fileno]
-                        self.listeners.remove(ready)
-            
-            # Step though and delete broken connections
-            for failed in xList:
-                if failed == self.socket:
-                    logging.error("Socket broke")
-                    for fileno, conn in self.connections:
-                        conn.close()
-                    self.running = False
+#def send(self, data):
+#logging.info("Sent message: %s" % data)
+#self.client.send("\x00%s\xff" % data)
 
-# Entry point
-if __name__ == "__main__":
-    
-    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
-    server = WebSocketServer("localhost", 8080, WebSocketEchoServer)
-    server_thread = Thread(target=server.listen, args=[5])
-    server_thread.start()
-    
-    # Add SIGINT handler for killing the threads
-    def signal_handler(signal, frame):
-        logging.info("Caught Ctrl+C, shutting down...")
-        server.running = False
-        sys.exit()
-    signal.signal(signal.SIGINT, signal_handler)
-    
-    while True:
-        time.sleep(100)
-
+#def close(self):
+#self.client.close()
 
