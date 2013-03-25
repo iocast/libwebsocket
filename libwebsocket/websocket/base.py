@@ -5,14 +5,60 @@ from select import select
 import re
 import logging
 
-# Simple WebSocket server implementation. Handshakes with the client then echos back everything
-# that is received. Has no dependencies (doesn't require Twisted etc) and works with the RFC6455
-# version of WebSockets. Tested with FireFox 16, though should work with the latest versions of
-# IE, Chrome etc.
-#
-# rich20b@gmail.com
-# Adapted from https://gist.github.com/512987 with various functions stolen from other sites, see
-# below for full details.
+import hashlib
+import base64
+
+
+class BaseHandler(object):
+    @property
+    def server(self):
+        return self._server
+    @property
+    def client(self):
+        return self._client
+    @property
+    def handshake(self):
+        return (
+                "HTTP/1.1 101 Web Socket Protocol Handshake\r\n"
+                "Upgrade: WebSocket\r\n"
+                "Connection: Upgrade\r\n"
+                "Sec-WebSocket-Accept: %(acceptstring)s\r\n"
+                "Server: TestTest\r\n"
+                "Access-Control-Allow-Origin: *\r\n"
+                "Access-Control-Allow-Credentials: true\r\n"
+                "\r\n"
+                )
+    
+    
+    def __init__(self, client, server):
+        self._client = client
+        self._server = server
+    
+    # Handshake with this client
+    def dohandshake(self, header, key=None):
+        
+        logging.debug("Begin handshake: %s" % header)
+        
+        # Get the handshake template
+        handshake = self.handshake
+        
+        # Step through each header
+        for line in header.split('\r\n')[1:]:
+            name, value = line.split(': ', 1)
+            
+            # If this is the key
+            if name.lower() == "sec-websocket-key":
+                
+                # Append the standard GUID and get digest
+                combined = value + self.server.magicGuiId
+                response = base64.b64encode(hashlib.sha1(combined).digest())
+                
+                # Replace the placeholder in the handshake response
+                handshake = handshake % { 'acceptstring' : response }
+        
+        logging.debug("Sending handshake %s" % handshake)
+        self.client.send(handshake)
+        return True
 
 
 
@@ -30,7 +76,7 @@ class WebSocketServer(object):
     @property
     def binary(self):
         return 0x02
-
+    
     
     # Constructor
     def __init__(self, bind, port, cls):

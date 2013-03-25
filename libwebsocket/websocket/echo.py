@@ -1,27 +1,15 @@
 import logging
-import hashlib
-import base64
+
+from base import BaseHandler
 
 
 # WebSocket implementation
-class WebSocketEchoServer(object):
-    
-    handshake = (
-                 "HTTP/1.1 101 Web Socket Protocol Handshake\r\n"
-                 "Upgrade: WebSocket\r\n"
-                 "Connection: Upgrade\r\n"
-                 "Sec-WebSocket-Accept: %(acceptstring)s\r\n"
-                 "Server: TestTest\r\n"
-                 "Access-Control-Allow-Origin: *\r\n"
-                 "Access-Control-Allow-Credentials: true\r\n"
-                 "\r\n"
-                 )
-    
+class EchoHandler(BaseHandler):
     
     # Constructor
     def __init__(self, client, server):
-        self.client = client
-        self.server = server
+        super(EchoHandler, self).__init__(client, server)
+        
         self.handshaken = False
         self.header = ""
         self.data = ""
@@ -138,32 +126,6 @@ class WebSocketEchoServer(object):
         return decodedChars
     
     
-    # Handshake with this client
-    def dohandshake(self, header, key=None):
-        
-        logging.debug("Begin handshake: %s" % header)
-        
-        # Get the handshake template
-        handshake = self.handshake
-        
-        # Step through each header
-        for line in header.split('\r\n')[1:]:
-            name, value = line.split(': ', 1)
-            
-            # If this is the key
-            if name.lower() == "sec-websocket-key":
-                
-                # Append the standard GUID and get digest
-                combined = value + self.server.magicGuiId
-                response = base64.b64encode(hashlib.sha1(combined).digest())
-                
-                # Replace the placeholder in the handshake response
-                handshake = handshake % { 'acceptstring' : response }
-        
-        logging.debug("Sending handshake %s" % handshake)
-        self.client.send(handshake)
-        return True
-
 #def onmessage(self, data):
 #logging.info("Got message: %s" % data)
 #self.send(data)
