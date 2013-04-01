@@ -1,0 +1,43 @@
+<Root>
+    <Node Position_xyz="568000,225000,100" Yaw="90.0">
+        <Node Position_xyz="568100,225000,100" Yaw="90.152405">
+            <Node Position_xyz="568200,225000,100" Yaw="91.197266">
+                <Node Position_xyz="568300,225000,100" Yaw="108.437653">
+                    <Node Position_xyz="568400,225000,100" Yaw="111.363281">
+                        <Node Position_xyz="568500,225000,100" Yaw="119.722229">
+                            <Node Position_xyz="568600,225000,100" Yaw="119.304291">
+                                <Node Position_xyz="568700,225000,100" Yaw="101.750427">
+                                    <Node Position_xyz="568800,225000,100" Yaw="66.224731">
+                                        <Node Position_xyz="568900,225000,100" Yaw="46.581116">
+                                            <Node Position_xyz="569000,225000,100" Yaw="44.909302">
+                                                <Node Position_xyz="568100,225000,100" Yaw="38.117645">
+                                                    <Node Position_xyz="568000,225000,100" Yaw="7.502869">
+                                                        <Node Position_xyz="568000,225000,100" Yaw="20.459259">
+                                                            <Node Position_xyz="568000,225000,100" Yaw="61.104767">
+                                                                <Node Position_xyz="568000,225000,100" Yaw="192.967621">
+                                                                    <Node Position_xyz="568000,225000,100" Yaw="221.283676">
+                                                                        <Node Position_xyz="568000,225000,100" Yaw="221.283691">
+                                                                            <Node Position_xyz="568000,225000,100" Yaw="263.392029">
+                                                                                <Node Position_xyz="568000,225000,100" Yaw="289.304901">
+                                                                                    <Node Position_xyz="568000,225000,100" Yaw="322.845337"/>
+                                                                                </Node>
+                                                                            </Node>
+                                                                        </Node>
+                                                                    </Node>
+                                                                </Node>
+                                                            </Node>
+                                                        </Node>
+                                                    </Node>
+                                                </Node>
+                                            </Node>
+                                        </Node>
+                                    </Node>
+                                </Node>
+                            </Node>
+                        </Node>
+                    </Node>
+                </Node>
+            </Node>
+        </Node>
+    </Node>
+</Root>

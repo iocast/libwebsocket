@@ -1,3 +1,5 @@
+import struct
+
 import logging
 
 from base import BaseHandler
@@ -6,17 +8,30 @@ from base import BaseHandler
 # WebSocket implementation
 class EchoHandler(BaseHandler):
     
+    @property
+    def server(self):
+        return self._server
+    @property
+    def client(self):
+        return self._client
+    
     # Constructor
-    def __init__(self, client, server):
-        super(EchoHandler, self).__init__(client, server)
+    def __init__(self, client, server, *args, **kwargs):
+        super(EchoHandler, self).__init__(*args, **kwargs)
+        self._client = client
+        self._server = server
         
         self.handshaken = False
         self.header = ""
         self.data = ""
     
     
-    # Serve this client
-    def feed(self, data):
+    def handle(self, data, *args, **kwargs):
+        """handle
+        Serve this client
+            
+        >>> help(BaseHandler.handle)
+        """
         
         # If we haven't handshaken yet
         if not self.handshaken:
@@ -25,7 +40,7 @@ class EchoHandler(BaseHandler):
             if self.header.find('\r\n\r\n') != -1:
                 parts = self.header.split('\r\n\r\n', 1)
                 self.header = parts[0]
-                if self.dohandshake(self.header, parts[1]):
+                if self.dohandshake(self.client, self.server, self.header, parts[1]):
                     logging.info("Handshake successful")
                     self.handshaken = True
         
