@@ -6,10 +6,11 @@
 |_|_|_.__/ \_/\_/ \___|_.__/|___/\___/ \___|_|\_\___|\__|
 </pre>
 
+implements the WebSocket protocol standard 13 [RFC 6455](http://tools.ietf.org/html/rfc6455).
+
 # prerequisite
 
 * Python >= 2.7.2
-* cElementTree >= 1.0.5-20051216
 
 
 # test
