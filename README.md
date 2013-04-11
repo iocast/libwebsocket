@@ -13,6 +13,14 @@
 
 
 # test
+Currently two different test servers has been implemented. A echo, which sends the incoming message back to the client, and a broadcast server, which sends messages at a predefined interval to all connected clients. Each example can be found in `tests/server` where `echo_server.py` is the echo and `broadcast_server.py` the broadcast server.
 
+You can run a server as follow:
 
+    python echo_server.py
 
+In addition a web client for testing is available, which can be found in the folder `tests/webclient`. Open a terminal an go to the folder `cd tests/webclient` and start a python web server as follow:
+
+    python -m SimpleHTTPServer 8000
+    
+Open the browser and enter `http://localhost:8000` to view the example.
