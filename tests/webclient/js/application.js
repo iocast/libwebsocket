@@ -2,6 +2,20 @@ var ws = null;
 var map = null;
 var vectorLayer = null
 
+
+var wkt = null;
+var geomFact = null;
+var jsts_reader = null;
+var jsts_parser = null;
+
+
+function radian(degree) {
+    return degree * (Math.PI / 180)
+}
+function degree(radian) {
+    return radian * (180 / Math.PI)
+}
+
 $(function() {
   map = new OpenLayers.Map('map', {
                            controls : [],
@@ -25,6 +39,14 @@ $(function() {
   map.addLayer(vectorLayer);
   
   
+  wkt = new OpenLayers.Format.WKT();
+  geomFact = new jsts.geom.GeometryFactory();
+  jsts_reader = new jsts.io.WKTReader();
+  jsts_parser = new jsts.io.OpenLayersParser();
+
+  
+  
+  
   $("#log").append("connecting<br/>");
   ws = new WebSocket("ws://localhost:8080");
   
@@ -35,12 +57,54 @@ $(function() {
   ws.onmessage = function (e) {
   var points = JSON.parse(e.data);
   //$("#log").append("received: " + e.data + "<br/>");
+  //Input_LB [hide, show]
   for(var i = 0; i < points.length; i++) {
-  console.log("(" + points[i].x + ", " + points[i].y + ")");
-  var geom = new OpenLayers.Geometry.Point(points[i].x, points[i].y);
-  var feature = new OpenLayers.Feature.Vector(geom, null, null);
-  vectorLayer.addFeatures([feature]);
+  //console.log("(" + points[i].x + ", " + points[i].y + ", " +  points[i].z + ")");
+  
+  var maxPx = 50.0;
+  var maxHeight = 100.0;
+  
+  var centroid = {
+  x : parseFloat(points[i].x),
+  y : parseFloat(points[i].y),
+  z : parseFloat(points[i].z)
   }
+  var yaw = parseFloat(points[i].yaw);
+  var r = centroid.z / maxHeight * maxPx;
+  
+  var pointOnCircle = {
+  x : centroid.x + 2*r * Math.cos(radian(yaw)),
+  y : centroid.y + 2*r * Math.sin(radian(yaw))
+  }
+  
+  var r2 = Math.sqrt(r*r + (2*r)*(2*r))
+  var alpha = Math.acos((r*r - (2*r)*(2*r) - r2*r2)/(-2 * (2*r) * r2))
+  
+  var rectangle_coord = [
+                         new jsts.geom.Coordinate(centroid.x, centroid.y),
+                         new jsts.geom.Coordinate(centroid.x + r2 * Math.sin(radian(yaw) + alpha), centroid.y + r2 * Math.cos(radian(yaw) + alpha)),
+                         new jsts.geom.Coordinate(centroid.x + r2 * Math.sin(radian(yaw) - alpha), centroid.y + r2 * Math.cos(radian(yaw) - alpha))
+                         ];
+  
+  
+  
+  var jsts_rectangle = geomFact.createPolygon(geomFact.createLinearRing(rectangle_coord));
+  
+  
+  var circle = OpenLayers.Geometry.Polygon.createRegularPolygon(new OpenLayers.Geometry.Point(centroid.x, centroid.y), r, 30, 0);
+  
+  var jsts_circle = jsts_reader.read(wkt.write(new OpenLayers.Feature.Vector(circle, null, null)));
+  
+  jsts_rectangle = jsts_reader.read(wkt.write(new OpenLayers.Feature.Vector(jsts_parser.write(jsts_rectangle), null, null)));
+  
+  
+  var jsts_vector = jsts_rectangle.union(jsts_circle);
+  
+  var feature = new OpenLayers.Feature.Vector(jsts_parser.write(jsts_vector), null, null);
+  vectorLayer.addFeatures([feature]);
+  
+  }
+  
   vectorLayer.redraw();
   };
   
@@ -66,3 +130,7 @@ $(function() {
  ws.close()
  };
  */
+
+
+
+
