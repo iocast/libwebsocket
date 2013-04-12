@@ -7,6 +7,7 @@
 </pre>
 
 implements the WebSocket protocol standard 13 [RFC 6455](http://tools.ietf.org/html/rfc6455).
+The following browsers supports the standard 13 [Wikipedia](http://en.wikipedia.org/wiki/WebSocket#Browser_support)
 
 # prerequisite
 
