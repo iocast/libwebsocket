@@ -1,6 +1,6 @@
 var ws = null;
 var map = null;
-var vectorLayer = null
+var vectorLayer = null;
 
 
 var wkt = null;
@@ -28,10 +28,10 @@ $(function() {
                                          '/data/orthophoto_small.png',
                                          new OpenLayers.Bounds(566250, 223400, 570575, 226640),
                                          new OpenLayers.Size(800, 600),
-                                         {numZoomLevels: 1}
+                                         {numZoomLevels: 1,
+                                         isBaseLayer : true}
                                          );
-  
-  
+
   map.addLayer(layer);
   map.zoomToMaxExtent();
   
@@ -43,7 +43,7 @@ $(function() {
   geomFact = new jsts.geom.GeometryFactory();
   jsts_reader = new jsts.io.WKTReader();
   jsts_parser = new jsts.io.OpenLayersParser();
-
+  
   
   
   
@@ -60,6 +60,13 @@ $(function() {
   //Input_LB [hide, show]
   for(var i = 0; i < points.length; i++) {
   //console.log("(" + points[i].x + ", " + points[i].y + ", " +  points[i].z + ")");
+  
+  
+  if(points[i].Input_LB == "show") {
+  //map.addLayer(infoLayer);
+  } else if (points[i].Input_LB == "hide") {
+  //map.removeLayer(infoLayer);
+  }
   
   var maxPx = 50.0;
   var maxHeight = 100.0;
