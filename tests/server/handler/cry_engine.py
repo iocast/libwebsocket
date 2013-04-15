@@ -30,7 +30,8 @@ class CryEngineHandler(BroadcastHandler):
                            'x' : pos[0],
                            'y' : pos[1],
                            'z' : pos[2],
-                           'yaw' : elem.attrib["Yaw"]
+                           'yaw' : elem.attrib["Yaw"],
+                           'Input_LB' : elm.attrib["Input_LB"]
                 })
         
         for id in self.server.connections:
