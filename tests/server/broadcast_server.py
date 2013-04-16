@@ -18,7 +18,7 @@ if __name__ == "__main__":
     
     logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
     server = WebSocketServer("localhost", 8080, CryEngineHandler)
-    server_thread = Thread(target=server.broadcast, args=[5], kwargs={'tick':2000, 'file':'../data/Position_Node.xml'})
+    server_thread = Thread(target=server.broadcast, args=[5], kwargs={'tick':1000, 'file':'../data/Position.xml'})
     server_thread.start()
     
     # Add SIGINT handler for killing the threads
