@@ -24,14 +24,15 @@ class CryEngineHandler(BroadcastHandler):
         out = []
         
         for event, elem in ET.iterparse(os.path.abspath(self.file)):
-            if elem.tag == "Node":
+            if elem.tag == "Root":
                 pos = elem.attrib["Position_xyz"].split(",")
                 out.append({
                            'x' : pos[0],
                            'y' : pos[1],
                            'z' : pos[2],
                            'yaw' : elem.attrib["Yaw"],
-                           'Input_LB' : elm.attrib["Input_LB"]
+                           'Input_LB' : elem.attrib["Input_LB"]
+                         
                 })
         
         for id in self.server.connections:
