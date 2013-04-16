@@ -1,12 +1,21 @@
 var ws = null;
 var map = null;
 var vectorLayer = null;
+var infoLayer = null;
 
 
 var wkt = null;
 var geomFact = null;
 var jsts_reader = null;
 var jsts_parser = null;
+ 
+  var style= {
+      strokeColor: "#ee2200",
+      fillColor: "#ee9900",
+      fillOpacity: 0.5,
+      strokeOpacity: 1,
+      strokeWidth: 1.5
+      };
 
 
 function radian(degree) {
@@ -31,6 +40,14 @@ $(function() {
                                          {numZoomLevels: 1,
                                          isBaseLayer : true}
                                          );
+                                         
+  infoLayer = new OpenLayers.Layer.Image(
+                                         'Wegnetz',
+                                         '/data/schweiz.png',
+                                         new OpenLayers.Bounds(566250, 223400, 570575, 226640),
+                                         new OpenLayers.Size(800, 600),
+                                         {numZoomLevels: 1}   
+                                         ); 
 
   map.addLayer(layer);
   map.zoomToMaxExtent();
@@ -45,8 +62,6 @@ $(function() {
   jsts_parser = new jsts.io.OpenLayersParser();
   
   
-  
-  
   $("#log").append("connecting<br/>");
   ws = new WebSocket("ws://localhost:8080");
   
@@ -55,26 +70,26 @@ $(function() {
   };
   
   ws.onmessage = function (e) {
+      // remove points
+  		for(var i = vectorLayer.features.length; i > 19 ; i--) {
+  			vectorLayer.removeFeatures([vectorLayer.features[0]]);
+  		}
+  		
+
+  	
+  	
+  	
   var points = JSON.parse(e.data);
-  //$("#log").append("received: " + e.data + "<br/>");
-  //Input_LB [hide, show]
+
   for(var i = 0; i < points.length; i++) {
-  //console.log("(" + points[i].x + ", " + points[i].y + ", " +  points[i].z + ")");
-  
-  
-  if(points[i].Input_LB == "show") {
-  //map.addLayer(infoLayer);
-  } else if (points[i].Input_LB == "hide") {
-  //map.removeLayer(infoLayer);
-  }
-  
+    
   var maxPx = 50.0;
-  var maxHeight = 100.0;
+  var maxHeight = 2000.0;
   
   var centroid = {
-  x : parseFloat(points[i].x),
-  y : parseFloat(points[i].y),
-  z : parseFloat(points[i].z)
+  x : parseFloat(points[i].x) + 565252,
+  y : parseFloat(points[i].y) + 218749,
+  z : parseFloat(points[i].z) + 685
   }
   var yaw = parseFloat(points[i].yaw);
   var r = centroid.z / maxHeight * maxPx;
@@ -103,12 +118,20 @@ $(function() {
   var jsts_circle = jsts_reader.read(wkt.write(new OpenLayers.Feature.Vector(circle, null, null)));
   
   jsts_rectangle = jsts_reader.read(wkt.write(new OpenLayers.Feature.Vector(jsts_parser.write(jsts_rectangle), null, null)));
-  
-  
+ 
   var jsts_vector = jsts_rectangle.union(jsts_circle);
+  var feature = new OpenLayers.Feature.Vector(jsts_parser.write(jsts_vector), null, style);
   
-  var feature = new OpenLayers.Feature.Vector(jsts_parser.write(jsts_vector), null, null);
   vectorLayer.addFeatures([feature]);
+  
+     if(points[i].Input_LB == "show") {
+  	map.removeLayer(layer);
+  	map.addLayer(infoLayer);
+ 	} 
+  else if (points[i].Input_LB == "hide") {
+  	map.removeLayer(infoLayer);
+  	map.addLayer(layer);
+  	}
   
   }
   
