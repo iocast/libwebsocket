@@ -1,7 +1,34 @@
+//var style_pt_old = new OpenLayers.Style();
+
+/**for(var i = 0; i < vectorLayer.features.length ; i++){
+
+	var rule[i] = new OpenLayers.Rule({
+  		filter: new OpenLayers.Filter.Comparison({
+      		type: OpenLayers.Filter.Comparison.EQUAL_TO,
+      		property: "count",
+      		value: i-1,
+  		}),
+  
+		symbolizer: {strokeColor: "#ee2200",
+      	fillColor: "#ee9900",
+      	fillOpacity: 1/i,
+      	strokeOpacity: 1/i,
+      	strokeWidth: 1.5
+     	};
+
+	});
+	
+	style_pt_old.addRules([rule[i]]);
+};
+
+
+*/
 var ws = null;
 var map = null;
 var vectorLayer = null;
 var infoLayer = null;
+var windLayer = null;
+var punktLayer = null;
 
 
 var wkt = null;
@@ -10,11 +37,25 @@ var jsts_reader = null;
 var jsts_parser = null;
  
   var style= {
+      strokeColor: "#6C2106",
+      fillColor: "#8BDF63",
+      fillOpacity: 0.3,
+      strokeOpacity: 0.6,
+      strokeWidth: 1.5
+      };
+	  
+  var style_pt= {
       strokeColor: "#ee2200",
       fillColor: "#ee9900",
       fillOpacity: 0.5,
       strokeOpacity: 1,
       strokeWidth: 1.5
+      };
+      
+  var style_wind= {
+      strokeColor: "#5858FA",
+      strokeOpacity: 1,
+      strokeWidth: 3
       };
 
 
@@ -36,16 +77,16 @@ $(function() {
                                          'Orthophoto',
                                          '/data/orthophoto_small.png',
                                          new OpenLayers.Bounds(566250, 223400, 570575, 226640),
-                                         new OpenLayers.Size(800, 600),
+                                         new OpenLayers.Size(1000, 750),
                                          {numZoomLevels: 1,
                                          isBaseLayer : true}
                                          );
                                          
   infoLayer = new OpenLayers.Layer.Image(
                                          'Wegnetz',
-                                         '/data/schweiz.png',
+                                         '/data/map_final.png',
                                          new OpenLayers.Bounds(566250, 223400, 570575, 226640),
-                                         new OpenLayers.Size(800, 600),
+                                         new OpenLayers.Size(1000, 750),
                                          {numZoomLevels: 1}   
                                          ); 
 
@@ -55,35 +96,42 @@ $(function() {
   vectorLayer = new OpenLayers.Layer.Vector("CryEngine", {});
   map.addLayer(vectorLayer);
   
+  punktLayer = new OpenLayers.Layer.Vector("Aktuelle Position",{});
+  map.addLayer(punktLayer);
+  
+  windLayer = new OpenLayers.Layer.Vector("Windrichtugn", {});
+  map.addLayer(windLayer);
+  
   
   wkt = new OpenLayers.Format.WKT();
   geomFact = new jsts.geom.GeometryFactory();
   jsts_reader = new jsts.io.WKTReader();
   jsts_parser = new jsts.io.OpenLayersParser();
   
-  
-  $("#log").append("connecting<br/>");
-  ws = new WebSocket("ws://localhost:8080");
+  //console.log("connecting");
+  ws = new WebSocket("ws://129.132.91.204:8080");
   
   ws.onopen = function() {
-  $("#log").append("connected<br/>");
+  //console.log("connected");
   };
   
   ws.onmessage = function (e) {
-      // remove points
-  		for(var i = vectorLayer.features.length; i > 19 ; i--) {
+  	// remove points
+  		for(var i = vectorLayer.features.length; i > 9 ; i--) {
   			vectorLayer.removeFeatures([vectorLayer.features[0]]);
   		}
   		
-
-  	
-  	
-  	
+  windLayer.removeAllFeatures(windLayer);
+  
+  punktLayer.removeAllFeatures(punktLayer);
+  		
   var points = JSON.parse(e.data);
 
   for(var i = 0; i < points.length; i++) {
     
-  var maxPx = 50.0;
+ // Position mit Blickrichtung anzeigen
+ 
+  var maxPx = 75.0;
   var maxHeight = 2000.0;
   
   var centroid = {
@@ -120,11 +168,72 @@ $(function() {
   jsts_rectangle = jsts_reader.read(wkt.write(new OpenLayers.Feature.Vector(jsts_parser.write(jsts_rectangle), null, null)));
  
   var jsts_vector = jsts_rectangle.union(jsts_circle);
-  var feature = new OpenLayers.Feature.Vector(jsts_parser.write(jsts_vector), null, style);
+  var feature = new OpenLayers.Feature.Vector(jsts_parser.write(jsts_circle), null, style);
+  var feature2 = new OpenLayers.Feature.Vector(jsts_parser.write(jsts_vector), null, style_pt);
   
   vectorLayer.addFeatures([feature]);
+  punktLayer.addFeatures([feature2]);
   
-     if(points[i].Input_LB == "show") {
+  // Windrichtung anzeigen
+  var w_richtung = 0;
+  if(points[i].W_Richtung == "Nord") {
+  	w_richtung = 180;
+  	}
+  	
+  else if (points[i].W_Richtung == "Ost") {
+  	w_richtung = 270;
+ 	}
+ 	
+  else if (points[i].W_Richtung == "Sued") {
+ 	w_richtung = 0;
+  	}
+  	
+  else if (points[i].W_Richtung == "West") {
+  	w_richtung = 90;
+  	}
+  	
+  else {
+  	w_richtung = 300;
+ 	}
+
+  
+  var point = new OpenLayers.Geometry.Point(570200, 223700);
+  var point2 = new OpenLayers.Geometry.Point(point.x + 100 * Math.sin(radian(w_richtung)), point.y + 100 * Math.cos(radian(w_richtung)));
+  var point3 = new OpenLayers.Geometry.Point(point2.x + 66 * Math.sin(radian(w_richtung + 210)), point2.y + 100 * Math.cos(radian(w_richtung + 210)));
+  var point4 = new OpenLayers.Geometry.Point(point2.x + 66 * Math.sin(radian(w_richtung + 150)), point2.y + 100 * Math.cos(radian(w_richtung + 150)));
+  var point5 = new OpenLayers.Geometry.Point(point.x + 66 * Math.sin(radian(w_richtung + 180)), point.y + 150 * Math.cos(radian(w_richtung + 180)));
+  
+  var pointList = [
+  				   point,
+  				   point2
+ 				   ];
+ 				   
+  var pointList2 =[ 
+  				   point2,
+  				   point3
+  				   ];
+  				   
+  var pointList3 =[ 
+  				   point2,
+  				   point4
+  				   ];
+  				   
+  var pointList4 =[ 
+  				   point,
+  				   point5
+  				   ];
+    
+  var lineFeature  = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(pointList),null, style_wind);
+  var lineFeature2 = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(pointList2),null, style_wind);
+  var lineFeature3 = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(pointList3),null, style_wind);
+  var lineFeature4 = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(pointList4),null, style_wind);
+  
+  windLayer.addFeatures([lineFeature, lineFeature2, lineFeature3, lineFeature4]);
+  
+  
+  // Verschiedene Layereinblenden
+  
+  if(points[i].Input_LB == "show") {
   	map.removeLayer(layer);
   	map.addLayer(infoLayer);
  	} 
@@ -136,6 +245,8 @@ $(function() {
   }
   
   vectorLayer.redraw();
+  windLayer.redraw();
+  punktLayer.redraw();
   };
   
   
